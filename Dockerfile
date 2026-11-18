@@ -18,4 +18,4 @@ RUN mkdir -p uploads && chmod 777 uploads
 EXPOSE 7860
 
 # Commande pour lancer l'application
-CMD ["python", "app.py"]
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:10000"]
