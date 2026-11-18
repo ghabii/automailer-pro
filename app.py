@@ -20,8 +20,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Configuration secrète pour la réception des signalements (invisible pour les utilisateurs)
-SUPPORT_SENDER_EMAIL = "mohamedghabi549@gmail.com"
-SUPPORT_SENDER_PASS = os.environ.get('SUPPORT_PASS')
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "mohamedghabi549@gmail.com")
+SUPPORT_PASS = os.environ.get("SUPPORT_PASS", "tbdyoumyxeizlotl")
 
 campaigns = {}
 
@@ -97,7 +97,7 @@ def send_worker(state, cv_path, sender_email, sender_password, subject_template,
         state["current_target"] = f"#{counter}/{state['limit']} — {email} ({company})"
 
         try:
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as server:
                 server.login(sender_email, sender_password)
                 personalized_subject = subject_template.replace('{company}', company).replace('{name}', name)
                 personalized_body = body_template.replace('{company}', company).replace('{name}', name)
@@ -253,12 +253,12 @@ def report_issue():
         return jsonify({"error": "Veuillez indiquer votre adresse e-mail et décrire votre problème."}), 400
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(ADMIN_SUPPORT_EMAIL, SUPPORT_SENDER_PASS)
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as server:
+            server.login(ADMIN_EMAIL, SUPPORT_PASS)
             msg = EmailMessage()
             msg['Subject'] = f"[AutoMailer Pro - Support] Signalement de {user_email}"
-            msg['From'] = ADMIN_SUPPORT_EMAIL
-            msg['To'] = ADMIN_SUPPORT_EMAIL
+            msg['From'] = ADMIN_EMAIL
+            msg['To'] = ADMIN_EMAIL
             msg['Reply-To'] = user_email
             msg.set_content(
                 f"Nouveau signalement recu depuis AutoMailer Pro :\n\n"
@@ -270,7 +270,7 @@ def report_issue():
         return jsonify({"success": True})
     except Exception as e:
         print(f"Erreur support : {e}")
-        return jsonify({"error": "Le service d'envoi est temporairement indisponible. Vérifiez la configuration SMTP."}), 500
+        return jsonify({"error": f"Erreur SMTP : {str(e)}"}), 500
 
 # ================= ROUTE : PDF 1 - GUIDE MOT DE PASSE GMAIL =================
 @app.route('/download_guide_gmail_pdf')
